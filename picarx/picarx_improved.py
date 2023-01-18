@@ -2,6 +2,7 @@ import time
 import os
 import logging
 from logdecorator import log_on_start, log_on_end, log_on_error
+import atexit
 try:
     from robot_hat import Pin, PWM, Servo, fileDB
     from robot_hat import Grayscale_Module, Ultrasonic
@@ -79,6 +80,10 @@ class Picarx(object):
         # usage: distance = self.ultrasonic.read()
         tring, echo= ultrasonic_pins
         self.ultrasonic = Ultrasonic(Pin(tring), Pin(echo))
+
+        # Set both motors speed to zero
+        atexit.register(self.set_motor_speed, 1, 0)
+        atexit.register(self.set_motor_speed, 2, 0)
         
 
     def set_motor_speed(self,motor,speed):
