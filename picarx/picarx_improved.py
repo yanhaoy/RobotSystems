@@ -1,5 +1,7 @@
 import time
 import os
+import logging
+from logdecorator import log_on_start, log_on_end, log_on_error
 try:
     from robot_hat import Pin, PWM, Servo, fileDB
     from robot_hat import Grayscale_Module, Ultrasonic
@@ -11,6 +13,11 @@ except ImportError:
     print("This computer does not appear to be a PiCar-X system (robot_hat is not present). Shadowing hardware calls with substitute functions")
     from sim_robot_hat import Pin, PWM, Servo, fileDB
     from sim_robot_hat import Grayscale_Module, Ultrasonic
+
+# Set up logger
+logging_format = "%(asctime)s: %(message)s"
+logging.basicConfig(format=logging_format, level=logging.INFO, datefmt="%H:%M:%S")
+logging.getLogger().setLevel(logging.DEBUG)
 
 # user and User home directory
 User = os.popen('echo ${SUDO_USER:-$LOGNAME}').readline().strip()
