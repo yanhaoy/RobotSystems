@@ -9,9 +9,6 @@ class Servo(_Basic_class):
     def __init__(self, pwm):
         super().__init__()
         self.pwm = pwm
-        self.pwm.period(4095)
-        prescaler = int(float(self.pwm.CLOCK) /self.pwm._freq/self.pwm.period())
-        self.pwm.prescaler(prescaler)
         # self.angle(90)
 
     # angle ranges -90 to 90 degrees
@@ -28,7 +25,6 @@ class Servo(_Basic_class):
         self._debug("pulse width rate: %f" % pwr)
         value = int(pwr*self.pwm.period())
         self._debug("pulse width value: %d" % value)
-        self.pwm.pulse_width(value)
 
     # pwm_value ranges MIN_PW 500 to MAX_PW 2500 degrees
     def set_pwm(self,pwm_value):

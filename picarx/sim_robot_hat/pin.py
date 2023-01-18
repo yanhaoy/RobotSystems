@@ -1,15 +1,7 @@
 #!/usr/bin/env python3
 from .basic import _Basic_class
-import RPi.GPIO as GPIO
 
 class Pin(_Basic_class):
-    OUT = GPIO.OUT
-    IN = GPIO.IN
-    IRQ_FALLING = GPIO.FALLING
-    IRQ_RISING = GPIO.RISING
-    IRQ_RISING_FALLING = GPIO.BOTH
-    PULL_UP = GPIO.PUD_UP
-    PULL_DOWN = GPIO.PUD_DOWN
     PULL_NONE = None
 
     _dict = {
@@ -75,10 +67,6 @@ class Pin(_Basic_class):
 
     def __init__(self, *value):
         super().__init__()
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setwarnings(False)
-
-        self.check_board_type()
 
         if len(value) > 0:
             pin = value[0]
@@ -144,9 +132,6 @@ class Pin(_Basic_class):
             return result
         else:
             value = value[0]
-            if self._mode in [None, self.IN]:
-                self.mode(self.OUT)
-            GPIO.output(self._pin, value)
             return value
 
     def on(self):

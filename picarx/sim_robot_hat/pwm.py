@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-import smbus, math
-from .i2c import I2C
+import math
+from .basic import _Basic_class
 
 timer = [
     {
@@ -8,7 +8,7 @@ timer = [
     }
 ] * 4
 
-class PWM(I2C):
+class PWM(_Basic_class):
     REG_CHN = 0x20
     REG_FRE = 0x30
     REG_PSC = 0x40
@@ -28,9 +28,7 @@ class PWM(I2C):
             else:
                 raise ValueError("PWM channel should be between [P0, P11], not {0}".format(channel))
         try:
-            self.send(0x2C, self.ADDR)
-            self.send(0, self.ADDR)
-            self.send(0, self.ADDR)
+            pass
         except IOError:
             self.ADDR = 0x15
 
@@ -38,10 +36,8 @@ class PWM(I2C):
         self._debug("PWM address: {:02X}".format(self.ADDR))
         self.channel = channel
         self.timer = int(channel/4)
-        self.bus = smbus.SMBus(1)
         self._pulse_width = 0
         self._freq = 50
-        self.freq(50)
 
     def i2c_write(self, reg, value):
         value_h = value >> 8
@@ -84,7 +80,6 @@ class PWM(I2C):
             self._prescaler = int(prescaler[0]) - 1
             reg = self.REG_PSC + self.timer
             self._debug("Set prescaler to: %s"%self._prescaler)
-            self.i2c_write(reg, self._prescaler)
 
     def period(self, *arr):
         global timer
@@ -94,7 +89,6 @@ class PWM(I2C):
             timer[self.timer]["arr"] = int(arr[0]) - 1
             reg = self.REG_ARR + self.timer
             self._debug("Set arr to: %s"%timer[self.timer]["arr"])
-            self.i2c_write(reg, timer[self.timer]["arr"])
 
     def pulse_width(self, *pulse_width):
         if len(pulse_width) == 0:
@@ -113,7 +107,6 @@ class PWM(I2C):
             temp = self._pulse_width_percent / 100.0
             # print(temp)
             pulse_width = temp * timer[self.timer]["arr"]
-            self.pulse_width(pulse_width)
 
         
 def test():

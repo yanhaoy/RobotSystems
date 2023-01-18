@@ -25,7 +25,7 @@ class fileDB(object):
 		self.db = db
 		# Check if db_file is existed, otherwise create one
 		if self.db != None:	
-			self.file_check_create(db, mode, owner)
+			pass
 		else:
 			raise ValueError('db: Missing file path parameter.')
 

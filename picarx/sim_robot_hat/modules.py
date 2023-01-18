@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-from .i2c import I2C
-from .adc import ADC
 import time
 
 class Ultrasonic():
@@ -256,9 +254,6 @@ class Joystick():
 
 class Grayscale_Module(object):
     def __init__(self, pin0, pin1, pin2, reference=1000):
-        self.chn_0 = ADC(pin0)
-        self.chn_1 = ADC(pin1)
-        self.chn_2 = ADC(pin2)
         self.reference = reference
 
     def get_line_status(self,fl_list):

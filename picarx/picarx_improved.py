@@ -1,11 +1,16 @@
-from robot_hat import Pin, PWM, Servo, fileDB
-from robot_hat import Grayscale_Module, Ultrasonic
-from robot_hat.utils import reset_mcu
 import time
 import os
+try:
+    from robot_hat import Pin, PWM, Servo, fileDB
+    from robot_hat import Grayscale_Module, Ultrasonic
+    from robot_hat.utils import reset_mcu
 
-reset_mcu()
-time.sleep(0.2)
+    reset_mcu()
+    time.sleep(0.2)
+except ImportError:
+    print("This computer does not appear to be a PiCar-X system (robot_hat is not present). Shadowing hardware calls with substitute functions")
+    from sim_robot_hat import Pin, PWM, Servo, fileDB
+    from sim_robot_hat import Grayscale_Module, Ultrasonic
 
 # user and User home directory
 User = os.popen('echo ${SUDO_USER:-$LOGNAME}').readline().strip()
