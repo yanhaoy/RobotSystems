@@ -3,6 +3,7 @@ import os
 import logging
 from logdecorator import log_on_start, log_on_end, log_on_error
 import atexit
+from math import *
 try:
     from robot_hat import Pin, PWM, Servo, fileDB
     from robot_hat import Grayscale_Module, Ultrasonic
@@ -84,6 +85,9 @@ class Picarx(object):
         # Set both motors speed to zero
         atexit.register(self.set_motor_speed, 1, 0)
         atexit.register(self.set_motor_speed, 2, 0)
+
+        self.wheelbase = 11.
+        self.trackwidth = 11.
         
 
     def set_motor_speed(self,motor,speed):
@@ -94,8 +98,8 @@ class Picarx(object):
         elif speed < 0:
             direction = -1 * self.cali_dir_value[motor]
         speed = abs(speed)
-        if speed != 0:
-            speed = int(speed /2 ) + 50
+        # if speed != 0:
+        #     speed = int(speed /2 ) + 50
         speed = speed - self.cali_speed_value[motor]
         if direction < 0:
             self.motor_direction_pins[motor].high()
@@ -197,6 +201,17 @@ class Picarx(object):
         else:
             self.set_motor_speed(1, speed)
             self.set_motor_speed(2, -1*speed)                  
+
+    def run(self, speed)          
+        theta = self.dir_current_angle
+        wheelbase = self.wheelbase
+        trackwidth = self.trackwidth
+
+        v_diff = (trackwidth*speed*tan(theta))/(2*wheelbase)
+
+        # Motor order: left, right
+        self.set_motor_speed(1, speed - v_diff)
+        self.set_motor_speed(2, -(speed + v_diff)) 
 
     def stop(self):
         self.set_motor_speed(1, 0)
