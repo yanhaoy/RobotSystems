@@ -215,6 +215,9 @@ class Picarx(object):
 
     def turn(self, theta_desired):
         theta = self.dir_current_angle
+        if theta_desired == theta:
+            return
+
         dir = sign(theta_desired - theta)
         for angle in range(theta, theta_desired, dir):
             self.set_dir_servo_angle(angle)
