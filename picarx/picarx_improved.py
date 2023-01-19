@@ -1,8 +1,9 @@
 import time
 import os
 import logging
-from logdecorator import log_on_start, log_on_end, log_on_error
+# from logdecorator import log_on_start, log_on_end, log_on_error
 import atexit
+from numpy import deg2rad, sign
 from math import *
 try:
     from robot_hat import Pin, PWM, Servo, fileDB
@@ -83,8 +84,7 @@ class Picarx(object):
         self.ultrasonic = Ultrasonic(Pin(tring), Pin(echo))
 
         # Set both motors speed to zero
-        atexit.register(self.set_motor_speed, 1, 0)
-        atexit.register(self.set_motor_speed, 2, 0)
+        atexit.register(self.stop)
 
         self.wheelbase = 11.
         self.trackwidth = 11.
@@ -202,20 +202,28 @@ class Picarx(object):
             self.set_motor_speed(1, speed)
             self.set_motor_speed(2, -1*speed)                  
 
-    def run(self, speed)          
+    def run(self, speed):
         theta = self.dir_current_angle
         wheelbase = self.wheelbase
         trackwidth = self.trackwidth
 
-        v_diff = (trackwidth*speed*tan(theta))/(2*wheelbase)
+        v_diff = round((trackwidth*speed*tan(deg2rad(theta)))/(2*wheelbase))
 
         # Motor order: left, right
         self.set_motor_speed(1, speed - v_diff)
-        self.set_motor_speed(2, -(speed + v_diff)) 
+        self.set_motor_speed(2, -(speed + v_diff))
+
+    def turn(self, theta_desired):
+        theta = self.dir_current_angle
+        dir = sign(theta_desired - theta)
+        for angle in range(theta, theta_desired, dir):
+            self.set_dir_servo_angle(angle)
+            time.sleep(0.01)
 
     def stop(self):
         self.set_motor_speed(1, 0)
         self.set_motor_speed(2, 0)
+        self.turn(0)
 
     def get_distance(self):
         return self.ultrasonic.read()
