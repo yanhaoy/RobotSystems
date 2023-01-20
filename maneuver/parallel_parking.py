@@ -1,17 +1,17 @@
-import time
-from picarx import Picarx
 import os
 import sys
 fpath = os.path.join(os.path.dirname(__file__), os.pardir)
-sys.path.append(fpath)
+sys.path.insert(0, fpath)
+import time
+from picarx import Picarx
 
 
 def parallel_parking(px, dir):
     # t_turn = (wheelbase*acos((2*wheelbase - par_dis*tan(theta))/(2*wheelbase)))/(v*tan(theta))
     # t_forward = (wheelbase*(1 - (2*wheelbase - par_dis*tan(theta))^2/(4*wheelbase^2))^(1/2))/(v*tan(theta))
 
-    t_forward = 1
-    t_turn = 0.25
+    t_forward = 0.4
+    t_turn = 0.5
     vel = 50
     if dir == 'left':
         ang = -30

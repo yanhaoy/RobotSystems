@@ -1,9 +1,9 @@
-import time
-from picarx import Picarx
 import os
 import sys
 fpath = os.path.join(os.path.dirname(__file__), os.pardir)
-sys.path.append(fpath)
+sys.path.insert(0, fpath)
+import time
+from picarx import Picarx
 
 
 def k_turning(px, dir):
@@ -12,8 +12,8 @@ def k_turning(px, dir):
     # t_1 = ((pi - 2*atan(forward_dis/par_dis_1))*(forward_dis^2 + par_dis_1^2))/(2*v*abs(par_dis_1))
     # t_2 = (par_dis_2*(forward_dis^2 + par_dis_1^2)*(4*atan(forward_dis/par_dis_1) - 2*pi + 180))/(4*forward_dis*par_dis_1*v)
 
-    t_forward = 1
-    t_turn = 0.25
+    t_forward = 0.6
+    t_turn = 1.2
     vel = 50
     if dir == 'left':
         ang = -30

@@ -1,11 +1,11 @@
+import os
+import sys
+fpath = os.path.join(os.path.dirname(__file__), os.pardir)
+sys.path.insert(0, fpath)
 from parallel_parking import parallel_parking
 from k_turning import k_turning
 import time
 from picarx import Picarx
-import os
-import sys
-fpath = os.path.join(os.path.dirname(__file__), os.pardir)
-sys.path.append(fpath)
 
 
 if __name__ == "__main__":

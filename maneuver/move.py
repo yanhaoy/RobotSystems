@@ -1,9 +1,9 @@
-import time
-from picarx import Picarx
 import os
 import sys
 fpath = os.path.join(os.path.dirname(__file__), os.pardir)
-sys.path.append(fpath)
+sys.path.insert(0, fpath)
+import time
+from picarx import Picarx
 
 
 def move(px):
