@@ -1,12 +1,12 @@
-import os
-import sys
-fpath = os.path.join(os.path.dirname(__file__), os.pardir)
-sys.path.insert(0, fpath)
-from parallel_parking import parallel_parking
-from k_turning import k_turning
+import os  # nopep8
+import sys  # nopep8
+fpath = os.path.join(os.path.dirname(__file__), os.pardir)  # nopep8
+sys.path.insert(0, fpath)  # nopep8
+
 import time
 from picarx import Picarx
-
+from parallel_parking import parallel_parking
+from k_turning import k_turning
 
 if __name__ == "__main__":
     try:
@@ -20,29 +20,29 @@ if __name__ == "__main__":
             print('Enter your operation:')
             x = input()
 
-            if x is 'w':
+            if x == 'w':
                 px.run(vel)
                 time.sleep(dt)
                 px.run(0)
-            elif x is 's':
+            elif x == 's':
                 px.run(-vel)
                 time.sleep(dt)
                 px.run(0)
-            elif x is 'a':
+            elif x == 'a':
                 ang -= dang
                 px.turn(ang)
-            elif x is 'd':
+            elif x == 'd':
                 ang += dang
                 px.turn(ang)
-            elif x is 'k':
+            elif x == 'k':
                 k_turning(px, 'left')
-            elif x is 'l':
+            elif x == 'l':
                 k_turning(px, 'right')
-            elif x is 'h':
+            elif x == 'h':
                 parallel_parking(px, 'left')
-            elif x is 'j':
+            elif x == 'j':
                 parallel_parking(px, 'right')
-            elif x is 'q':
+            elif x == 'q':
                 break
             else:
                 continue

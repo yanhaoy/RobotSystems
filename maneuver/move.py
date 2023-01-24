@@ -1,7 +1,8 @@
-import os
-import sys
-fpath = os.path.join(os.path.dirname(__file__), os.pardir)
-sys.path.insert(0, fpath)
+import os  # nopep8
+import sys  # nopep8
+fpath = os.path.join(os.path.dirname(__file__), os.pardir)  # nopep8
+sys.path.insert(0, fpath)  # nopep8
+
 import time
 from picarx import Picarx
 

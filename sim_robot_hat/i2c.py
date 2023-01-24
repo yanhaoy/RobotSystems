@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from .basic import _Basic_class
-from smbus import SMBus
+# from smbus import SMBus
 
 def _retry_wrapper(func):
     def wrapper(self, *arg, **kwargs):
@@ -22,7 +22,7 @@ class I2C(_Basic_class):
     def __init__(self, *args, **kargs):     # *args表示位置参数（形式参数），可无，； **kargs表示默认值参数，可无。
         super().__init__()
         self._bus = 1
-        self._smbus = SMBus(self._bus)
+        # self._smbus = SMBus(self._bus)
 
     @_retry_wrapper
     def _i2c_write_byte(self, addr, data):   # i2C 写系列函数
@@ -38,7 +38,7 @@ class I2C(_Basic_class):
     @_retry_wrapper
     def _i2c_write_word_data(self, addr, reg, data):
         self._debug("_i2c_write_word_data: [0x{:02X}] [0x{:02X}] [0x{:04X}]".format(addr, reg, data))
-        return self._smbus.write_word_data(addr, reg, data)
+        # return self._smbus.write_word_data(addr, reg, data)
     
     @_retry_wrapper
     def _i2c_write_i2c_block_data(self, addr, reg, data):
@@ -48,7 +48,7 @@ class I2C(_Basic_class):
     @_retry_wrapper
     def _i2c_read_byte(self, addr):   # i2C 读系列函数
         self._debug("_i2c_read_byte: [0x{:02X}]".format(addr))
-        return self._smbus.read_byte(addr)
+        # return self._smbus.read_byte(addr)
 
     @_retry_wrapper
     def _i2c_read_i2c_block_data(self, addr, reg, num):
@@ -125,7 +125,8 @@ class I2C(_Basic_class):
         else:
             return False
         for i in range(len(result)):
-            result[i] = self._i2c_read_byte(addr)
+            pass
+            # result[i] = self._i2c_read_byte(addr)
         return result
 
     def mem_write(self, data, addr, memaddr, timeout=5000, addr_size=8): #memaddr match to chn
