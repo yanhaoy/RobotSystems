@@ -8,10 +8,17 @@ from picarx import Picarx
 
 
 def move(px):
+    """
+    Perform a test move.
+
+    :param px: The car hardware interface.
+    """
+    # Do a forward turning
     px.turn(-30)
     px.run(50)
     time.sleep(1)
-    px.run(0)
+
+    # Stop
     px.stop()
     time.sleep(.2)
 

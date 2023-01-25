@@ -8,9 +8,13 @@ from picarx import Picarx
 
 
 def parallel_parking(px, dir):
-    # t_turn = (wheelbase*acos((2*wheelbase - par_dis*tan(theta))/(2*wheelbase)))/(v*tan(theta))
-    # t_forward = (wheelbase*(1 - (2*wheelbase - par_dis*tan(theta))^2/(4*wheelbase^2))^(1/2))/(v*tan(theta))
+    """
+    Perform the parallel parking along the specified direction.
 
+    :param px: The car hardware interface.
+    :param dir: Parking direction, can be 'left' or 'right'.
+    """
+    # Define parking parameters
     t_forward = 0.4
     t_turn = 0.5
     vel = 50

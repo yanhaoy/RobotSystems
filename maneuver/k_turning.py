@@ -8,11 +8,13 @@ from picarx import Picarx
 
 
 def k_turning(px, dir):
-    # theta_1 = atan((2*wheelbase*abs(par_dis_1))/(forward_dis^2 + par_dis_1^2))
-    # theta_2 = atan((4*forward_dis*par_dis_1*wheelbase)/(par_dis_2*(forward_dis^2 + par_dis_1^2)))
-    # t_1 = ((pi - 2*atan(forward_dis/par_dis_1))*(forward_dis^2 + par_dis_1^2))/(2*v*abs(par_dis_1))
-    # t_2 = (par_dis_2*(forward_dis^2 + par_dis_1^2)*(4*atan(forward_dis/par_dis_1) - 2*pi + 180))/(4*forward_dis*par_dis_1*v)
+    """
+    Perform the k-turning along the specified direction.
 
+    :param px: The car hardware interface.
+    :param dir: Turning direction, can be 'left' or 'right'.
+    """
+    # Define turning parameters
     t_forward = 0.6
     t_turn = 1.2
     vel = 50
