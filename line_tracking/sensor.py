@@ -4,8 +4,14 @@ import sys  # nopep8
 fpath = os.path.join(os.path.dirname(__file__), os.pardir)  # nopep8
 sys.path.insert(0, fpath)  # nopep8
 
+import time
+from numpy import mean
 try:
     from robot_hat import ADC
+    from robot_hat.utils import reset_mcu
+
+    reset_mcu()
+    time.sleep(0.2)
 except ImportError:
     print("This computer does not appear to be a PiCar-X system (robot_hat is not present). Shadowing hardware calls with substitute functions")
     from sim_robot_hat import ADC
@@ -33,5 +39,17 @@ class Sensor(object):
 
         return adc_value_list
 
-    def zero(self):
-        self.zero_value = self.read(zero=False)
+    def zero(self, n=100):
+        buffer = [None]*n
+        for i in range(n):
+            buffer[i] = self.read(zero=False)
+            time.sleep(0.001)
+
+        self.zero_value = mean(buffer, axis=0)
+
+
+if __name__ == "__main__":
+    sensor = Sensor()
+    while 1:
+        print(sensor.read())
+        time.sleep(0.1)

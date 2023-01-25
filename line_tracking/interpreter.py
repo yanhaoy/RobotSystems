@@ -3,7 +3,7 @@ from numpy import sign
 
 
 class Interpreter(object):
-    def __init__(self, sensitivity=25, polarity=True):
+    def __init__(self, sensitivity=50, polarity=False):
         # polarity: True for darker
         self.sensitivity = sensitivity
         self.polarity = polarity
@@ -15,6 +15,6 @@ class Interpreter(object):
         else:
             dir = sign(diff)
             if self.polarity:
-                return dir
-            else:
                 return -dir
+            else:
+                return dir

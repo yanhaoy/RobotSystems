@@ -11,9 +11,9 @@ class Controller(object):
         # self.sensor = Sensor()
         # self.interpreter = Interpreter()
         self.steering_angle = steering_angle
-        self.vel = 50
+        self.vel = vel
         self.px = Picarx()
 
     def drive(self, dir):
-        self.px.turn(dir*self.steering_angle)
+        self.px.turn(round(-dir*self.steering_angle))
         self.px.run(self.vel)
