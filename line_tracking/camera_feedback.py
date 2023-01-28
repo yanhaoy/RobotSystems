@@ -1,4 +1,3 @@
-import cv2
 #!/usr/bin/env python3
 import os  # nopep8
 import sys  # nopep8
@@ -8,304 +7,224 @@ sys.path.insert(0, fpath)  # nopep8
 from picarx import Picarx
 from picamera.array import PiRGBArray
 from picamera import PiCamera
+import cv2
 import numpy as np
 import logging
 import math
 import time
 
-_SHOW_IMAGE = False
 
-############################
-# Frame processing steps
-############################
+def region_of_interest(image):
+    # Get dimension
+    height, width = image.shape
 
+    # Create a polygon for the bottom half of the screen
+    polygon = np.array([[(0, height * 1 / 2), (width, height * 1 / 2),
+                       (width, height), (0, height), ]], np.int32)
 
-def detect_lane(frame):
-    logging.debug('detecting lane lines...')
-
-    edges = detect_edges(frame)
-    show_image('edges', edges)
-
-    cropped_edges = region_of_interest(edges)
-    show_image('edges cropped', cropped_edges)
-
-    line_segments = detect_line_segments(cropped_edges)
-    line_segment_image = display_lines(frame, line_segments)
-    show_image("line segments", line_segment_image)
-
-    lane_lines = average_slope_intercept(frame, line_segments)
-    lane_lines_image = display_lines(frame, lane_lines)
-    show_image("lane lines", lane_lines_image)
-
-    return lane_lines, lane_lines_image
-
-
-def detect_edges(frame):
-    # filter for blue lane lines
-    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    show_image("hsv", hsv)
-    lower_blue = np.array([60, 40, 40])
-    upper_blue = np.array([150, 255, 255])
-    mask = cv2.inRange(hsv, lower_blue, upper_blue)
-    show_image("blue mask", mask)
-
-    # detect edges
-    edges = cv2.Canny(mask, 200, 400)
-
-    return edges
-
-
-def detect_edges_old(frame):
-    # filter for blue lane lines
-    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    show_image("hsv", hsv)
-    for i in range(16):
-        lower_blue = np.array([30, 16 * i, 0])
-        upper_blue = np.array([150, 255, 255])
-        mask = cv2.inRange(hsv, lower_blue, upper_blue)
-        show_image("blue mask Sat=%s" % (16 * i), mask)
-
-    # for i in range(16):
-        #lower_blue = np.array([16 * i, 40, 50])
-        #upper_blue = np.array([150, 255, 255])
-        #mask = cv2.inRange(hsv, lower_blue, upper_blue)
-       # show_image("blue mask hue=%s" % (16* i), mask)
-
-        # detect edges
-    edges = cv2.Canny(mask, 200, 400)
-
-    return edges
-
-
-def region_of_interest(canny):
-    height, width = canny.shape
-    mask = np.zeros_like(canny)
-
-    # only focus bottom half of the screen
-
-    polygon = np.array([[
-        (0, height * 1 / 2),
-        (width, height * 1 / 2),
-        (width, height),
-        (0, height),
-    ]], np.int32)
-
+    # Create mask
+    mask = np.zeros_like(image)
     cv2.fillPoly(mask, polygon, 255)
-    show_image("mask", mask)
-    masked_image = cv2.bitwise_and(canny, mask)
+
+    # Apply mask
+    masked_image = cv2.bitwise_and(image, mask)
+
     return masked_image
 
 
-def detect_line_segments(cropped_edges):
-    # tuning min_threshold, minLineLength, maxLineGap is a trial and error process by hand
-    rho = 1  # precision in pixel, i.e. 1 pixel
-    angle = np.pi / 180  # degree in radian, i.e. 1 degree
-    min_threshold = 10  # minimal of votes
-    line_segments = cv2.HoughLinesP(cropped_edges, rho, angle, min_threshold, np.array([]), minLineLength=8,
-                                    maxLineGap=4)
-
-    if line_segments is not None:
-        for line_segment in line_segments:
-            logging.debug('detected line_segment:')
-            logging.debug("%s of length %s" %
-                          (line_segment, length_of_line_segment(line_segment[0])))
-
-    return line_segments
-
-
 def average_slope_intercept(frame, line_segments):
-    """
-    This function combines line segments into one or two lane lines
-    If all line slopes are < 0: then we only have detected left lane
-    If all line slopes are > 0: then we only have detected right lane
-    """
+    # Create line list
     lane_lines = []
     if line_segments is None:
-        logging.info('No line_segment segments detected')
+        logging.info('No line segments detected')
         return lane_lines
 
-    height, width, _ = frame.shape
-    left_fit = []
-    right_fit = []
+    # Get shape
+    _, width, _ = frame.shape
 
+    # Init lists
+    left_fit = []
+    left_weight = []
+    right_fit = []
+    right_weight = []
+
+    # Take 2/3 of the screen on each side
     boundary = 1/3
-    # left lane line segment should be on left 2/3 of the screen
     left_region_boundary = width * (1 - boundary)
-    right_region_boundary = width * boundary  # right lane line segment should be on left 2/3 of the screen
+    right_region_boundary = width * boundary
 
     for line_segment in line_segments:
         for x1, y1, x2, y2 in line_segment:
+            # Skip vertical lines
             if x1 == x2:
-                logging.info('skipping vertical line segment (slope=inf): %s' % line_segment)
+                logging.info('Skipping vertical line segment (slope=inf): %s' % line_segment)
                 continue
+
+            # Compute line parameter
             fit = np.polyfit((x1, x2), (y1, y2), 1)
             slope = fit[0]
             intercept = fit[1]
+            length = np.sqrt((x1-x2)**2 + (y1-y2)**2)
+
+            # Determine left or right by slope
             if slope < 0:
                 if x1 < left_region_boundary and x2 < left_region_boundary:
                     left_fit.append((slope, intercept))
+                    left_weight.append(length)
             else:
                 if x1 > right_region_boundary and x2 > right_region_boundary:
                     right_fit.append((slope, intercept))
+                    right_weight.append(length)
 
-    left_fit_average = np.average(left_fit, axis=0)
+    # Compute the weighted average
+    left_fit_average = np.average(left_fit, axis=0, weights=left_weight)
     if len(left_fit) > 0:
         lane_lines.append(make_points(frame, left_fit_average))
 
-    right_fit_average = np.average(right_fit, axis=0)
+    # Compute the weighted average
+    right_fit_average = np.average(right_fit, axis=0, weights=right_weight)
     if len(right_fit) > 0:
         lane_lines.append(make_points(frame, right_fit_average))
-
-    # [[[316, 720, 484, 432]], [[1009, 720, 718, 432]]]
-    logging.debug('lane lines: %s' % lane_lines)
 
     return lane_lines
 
 
 def compute_steering_angle(frame, lane_lines):
-    """ Find the steering angle based on lane line coordinate
-        We assume that camera is calibrated to point to dead center
-    """
-    if len(lane_lines) == 0:
-        logging.info('No lane lines detected, do nothing')
-        return -90
-
     height, width, _ = frame.shape
-    if len(lane_lines) == 1:
-        logging.debug('Only detected one lane line, just follow it. %s' % lane_lines[0])
-        x1, _, x2, _ = lane_lines[0][0]
-        x_offset = x2 - x1
+    if not len(lane_lines) == 2:
+        # Check lane number
+        logging.info('Wrong lane number')
+        return 0
     else:
+        # Compute center
         _, _, left_x2, _ = lane_lines[0][0]
         _, _, right_x2, _ = lane_lines[1][0]
-        # 0.0 means car pointing to center, -0.03: car is centered to left, +0.03 means car pointing to right
         camera_mid_offset_percent = 0.0
         mid = int(width / 2 * (1 + camera_mid_offset_percent))
         x_offset = (left_x2 + right_x2) / 2 - mid
 
-    # find the steering angle, which is angle between navigation direction to end of center line
+    # Compute steering angle
     y_offset = int(height / 2)
+    steering_angle = np.rad2deg(math.atan(x_offset / y_offset))
 
-    # angle (in radian) to center vertical line
-    angle_to_mid_radian = math.atan(x_offset / y_offset)
-    # angle (in degrees) to center vertical line
-    angle_to_mid_deg = int(angle_to_mid_radian * 180.0 / math.pi)
-    steering_angle = angle_to_mid_deg + 90  # this is the steering angle needed by picar front wheel
-
-    logging.debug('new steering angle: %s' % steering_angle)
     return steering_angle
 
 
-def stabilize_steering_angle(curr_steering_angle, new_steering_angle, num_of_lane_lines, max_angle_deviation_two_lines=5, max_angle_deviation_one_lane=1):
-    """
-    Using last steering angle to stabilize the steering angle
-    This can be improved to use last N angles, etc
-    if new angle is too different from current angle, only turn by max_angle_deviation degrees
-    """
-    if num_of_lane_lines == 2:
-        # if both lane lines detected, then we can deviate more
-        max_angle_deviation = max_angle_deviation_two_lines
-    else:
-        # if only one lane detected, don't deviate too much
-        max_angle_deviation = max_angle_deviation_one_lane
-
-    angle_deviation = new_steering_angle - curr_steering_angle
-    if abs(angle_deviation) > max_angle_deviation:
-        stabilized_steering_angle = int(curr_steering_angle
-                                        + max_angle_deviation * angle_deviation / abs(angle_deviation))
-    else:
-        stabilized_steering_angle = new_steering_angle
-    logging.info('Proposed angle: %s, stabilized angle: %s' %
-                 (new_steering_angle, stabilized_steering_angle))
-    return stabilized_steering_angle
-
-
-############################
-# Utility Functions
-############################
 def display_lines(frame, lines, line_color=(0, 255, 0), line_width=10):
-    line_image = np.zeros_like(frame)
+    # Copy frame
+    line_frame = np.copy(frame)
+
+    # Draw lines
     if lines is not None:
         for line in lines:
             for x1, y1, x2, y2 in line:
-                cv2.line(line_image, (x1, y1), (x2, y2), line_color, line_width)
-    line_image = cv2.addWeighted(frame, 0.8, line_image, 1, 1)
-    return line_image
+                cv2.line(line_frame, (x1, y1), (x2, y2), line_color, line_width)
+
+    return line_frame
 
 
-def display_heading_line(frame, steering_angle, line_color=(0, 0, 255), line_width=5, ):
-    heading_image = np.zeros_like(frame)
+def display_heading_line(frame, steering_angle, line_color=(0, 0, 255), line_width=5):
+    # Copy frame
+    heading_image = np.copy(frame)
+
+    # Get dimension
     height, width, _ = frame.shape
 
-    # figure out the heading line from steering angle
-    # heading line (x1,y1) is always center bottom of the screen
-    # (x2, y2) requires a bit of trigonometry
-
-    # Note: the steering angle of:
-    # 0-89 degree: turn left
-    # 90 degree: going straight
-    # 91-180 degree: turn right
-    steering_angle_radian = steering_angle / 180.0 * math.pi
+    # Compute line
+    steering_angle_radian = np.deg2rad(steering_angle)
     x1 = int(width / 2)
     y1 = height
-    x2 = int(x1 - height / 2 / math.tan(steering_angle_radian))
+    x2 = int(x1 + height / 2 * math.tan(steering_angle_radian))
     y2 = int(height / 2)
 
+    # Draw line
     cv2.line(heading_image, (x1, y1), (x2, y2), line_color, line_width)
-    heading_image = cv2.addWeighted(frame, 0.8, heading_image, 1, 1)
 
     return heading_image
 
 
-def length_of_line_segment(line):
-    x1, y1, x2, y2 = line
-    return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
-
-
-def show_image(title, frame, show=_SHOW_IMAGE):
-    if show:
-        cv2.imshow(title, frame)
-
-
 def make_points(frame, line):
+    # Get dimension
     height, width, _ = frame.shape
-    slope, intercept = line
-    y1 = height  # bottom of the frame
-    y2 = int(y1 * 1 / 2)  # make points from middle of the frame down
 
-    # bound the coordinates within the frame
+    # Get line parameter
+    slope, intercept = line
+
+    # Compute points
+    y1 = height
+    y2 = int(y1 * 1 / 2)
     x1 = max(-width, min(2 * width, int((y1 - intercept) / slope)))
     x2 = max(-width, min(2 * width, int((y2 - intercept) / slope)))
+
     return [[x1, y1, x2, y2]]
 
 
-def steer(frame, lane_lines):
-    logging.debug('steering...')
-    if len(lane_lines) == 0:
-        logging.error('No lane lines detected, nothing to do.')
-        return frame
+def camera_feedback(frame, plot=False):
+    if plot:
+        cv2.imshow('frame', frame)
 
-    new_steering_angle = compute_steering_angle(frame, lane_lines)
-    # self.curr_steering_angle = stabilize_steering_angle(self.curr_steering_angle, new_steering_angle, len(lane_lines))
+    # Apply Gaussian blur
+    blur = cv2.GaussianBlur(frame, (25, 25), 0)
+    if plot:
+        cv2.imshow('blur', blur)
 
-    # if self.car is not None:
-    #     self.car.front_wheels.turn(self.curr_steering_angle)
-    curr_heading_image = display_heading_line(frame, new_steering_angle)
-    show_image("heading", curr_heading_image)
+    # Convert to HSV
+    hsv = cv2.cvtColor(blur, cv2.COLOR_BGR2HSV)
+    if plot:
+        cv2.imshow('hsv', hsv)
 
-    return new_steering_angle, curr_heading_image
+    # Select color
+    lower_blue = np.array([65, 0, 0])
+    upper_blue = np.array([105, 255, 255])
+    mask = cv2.inRange(hsv, lower_blue, upper_blue)
+    if plot:
+        cv2.imshow('mask', mask)
 
-############################
-# Test Functions
-############################
+    # Morphology operations
+    opening = cv2.morphologyEx(mask, cv2.MORPH_OPEN, np.ones((9, 9), np.uint8))
+    if plot:
+        cv2.imshow('opening', opening)
+    closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, np.ones((9, 9), np.uint8))
+    if plot:
+        cv2.imshow('closing', closing)
+
+    # Detect edges
+    edges = cv2.Canny(closing, 100, 200)
+    if plot:
+        cv2.imshow('edges', edges)
+
+    # Crop ROI
+    cropped_edges = region_of_interest(edges)
+    if plot:
+        cv2.imshow('cropped_edges', cropped_edges)
+
+    # Fit lines
+    line_segments = cv2.HoughLinesP(cropped_edges, 1, np.pi / 180, 25, None, 50, 75)
+    line_segment_image = display_lines(frame, line_segments)
+    if plot:
+        cv2.imshow("line_segment_image", line_segment_image)
+
+    # Merge lines
+    lane_lines = average_slope_intercept(frame, line_segments)
+    lane_lines_image = display_lines(frame, lane_lines)
+    if plot:
+        cv2.imshow("lane_lines_image", lane_lines_image)
+
+    # Compute steering
+    steering_angle = compute_steering_angle(frame, lane_lines)
+    final_frame = display_heading_line(lane_lines_image, steering_angle)
+    logging.info('steering_angle: %d' % steering_angle)
+    cv2.imshow("final_frame", final_frame)
+
+    return steering_angle
 
 
 def test_photo(file):
+    # Load photo
     frame = np.load(file)
-    lane_lines, frame = detect_lane(frame)
-    ang, final_frame = steer(frame, lane_lines)
-    print(ang)
-    show_image("final_frame", final_frame)
+
+    camera_feedback(frame)
+
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
@@ -314,27 +233,29 @@ def test_photo(file):
 
 px = Picarx()
 px.set_camera_servo2_angle(-40)
+steering_angle = 0
 
-with PiCamera() as camera:
-    print("start color detect")
-    camera.resolution = (640,480)
-    camera.framerate = 24
-    rawCapture = PiRGBArray(camera, size=camera.resolution)  
-    time.sleep(2)
+camera = PiCamera()
+camera.resolution = (640, 480)
+camera.framerate = 24
+rawCapture = PiRGBArray(camera, size=camera.resolution)
+time.sleep(2)
 
-    for frame in camera.capture_continuous(rawCapture, format="bgr",use_video_port=True):# use_video_port=True
-        frame = frame.array
-        lane_lines, frame = detect_lane(frame)
-        ang, final_frame = steer(frame, lane_lines)
-        print(ang)
-        cv2.imshow("final_frame", final_frame)    # OpenCV image show
-        rawCapture.truncate(0)   # Release cache
-    
-        k = cv2.waitKey(1) & 0xFF
-        # 27 is the ESC key, which means that if you press the ESC key to exit
-        if k == 27:
-            break
+px.turn(0)
+px.run(50)
 
-    print('quit ...') 
+for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
+    frame = frame.array
+    steering_angle_current = camera_feedback(frame)
+    steering_angle = steering_angle*0.5 + steering_angle_current*0.5
+    px.turn(np.round(steering_angle))
+    rawCapture.truncate(0)   # Release cache
+
+    k = cv2.waitKey(1) & 0xFF
+    # 27 is the ESC key, which means that if you press the ESC key to exit
+    if k == 27:
+        break
+
+    px.stop()
     cv2.destroyAllWindows()
-    camera.close()  
+    camera.close()
