@@ -8,8 +8,6 @@ from picarx import Picarx
 
 class Controller(object):
     def __init__(self, steering_angle=5, vel=50):
-        # self.sensor = Sensor()
-        # self.interpreter = Interpreter()
         self.steering_angle = steering_angle
         self.vel = vel
         self.px = Picarx()

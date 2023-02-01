@@ -8,7 +8,7 @@ def line_tracking():
     controller = Controller()
     sensor = Sensor()
     interpreter = Interpreter()
-    input()
+    input('Ready?')
     while 1:
         val = sensor.read()
         dir = interpreter.process(val)

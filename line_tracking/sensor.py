@@ -22,9 +22,6 @@ class Sensor(object):
         self.chn_0 = ADC(pin0)
         self.chn_1 = ADC(pin1)
         self.chn_2 = ADC(pin2)
-        self.zero_value = [None]*3
-
-        self.zero()
 
     def read(self, zero=True):
         # The brighter the area, the larger the value obtained
@@ -33,19 +30,7 @@ class Sensor(object):
         adc_value_list.append(self.chn_1.read())
         adc_value_list.append(self.chn_2.read())
 
-        if zero:
-            for i in range(3):
-                adc_value_list[i] -= self.zero_value[i]
-
         return adc_value_list
-
-    def zero(self, n=100):
-        buffer = [None]*n
-        for i in range(n):
-            buffer[i] = self.read(zero=False)
-            time.sleep(0.001)
-
-        self.zero_value = mean(buffer, axis=0)
 
 
 if __name__ == "__main__":

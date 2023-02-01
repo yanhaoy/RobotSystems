@@ -241,6 +241,7 @@ camera.framerate = 24
 rawCapture = PiRGBArray(camera, size=camera.resolution)
 time.sleep(2)
 
+input('Ready?')
 px.turn(0)
 px.run(50)
 
@@ -256,6 +257,6 @@ for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
     if k == 27:
         break
 
-    px.stop()
-    cv2.destroyAllWindows()
-    camera.close()
+px.stop()
+cv2.destroyAllWindows()
+camera.close()
