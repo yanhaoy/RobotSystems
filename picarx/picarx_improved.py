@@ -231,20 +231,8 @@ class Picarx(object):
 
         :param theta_desired: The desired steering angle in degrees, can be negative, 0, or positive.
         """
-        # Get current steering angle
-        theta = self.dir_current_angle
-
-        # If they are the same, do nothing
-        if theta_desired == theta:
-            return
-
-        # Compute rotate direction
-        dir = sign(theta_desired - theta)
-
-        # Turn smoothly to desired angle
-        for angle in range(theta, theta_desired, dir):
-            self.set_dir_servo_angle(angle)
-            time.sleep(0.01)
+        theta_desired = min(max(theta_desired, -35), 35)
+        self.set_dir_servo_angle(theta_desired)
 
     def stop(self):
         """

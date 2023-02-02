@@ -16,10 +16,11 @@ controller = Controller()
 sensor = Sensor()
 interpreter = Interpreter()
 
-with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-    eSensor = executor.submit(producers, busses_sensor, 1e3)
-    eInterpreter = executor.submit(consumer_producers, busses_sensor, busses_interpreter, 1e3)
-    eController = executor.submit(consumers, busses_interpreter, 1e3)
+with concurrent.futures.ThreadPoolExecutor() as executor:
+    eSensor = executor.submit(producers, 1e-2, sensor, busses_sensor)
+    eInterpreter = executor.submit(consumer_producers, 1e-2, interpreter,
+                                   busses_sensor, busses_interpreter)
+    eController = executor.submit(consumers, 1e-1, controller, busses_interpreter)
 
 eSensor.result()
 eInterpreter.result()
