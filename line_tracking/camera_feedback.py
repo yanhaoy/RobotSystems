@@ -113,8 +113,9 @@ def camera_feedback(frame, plot=False):
     cx = M['mu20']/M['m00']
     cy = M['mu02']/M['m00']
     cxy = M['mu11']/M['m00']
-    steering_angle = np.round(1/2*np.arctan(2*cxy/(cx-cy)))
+    steering_angle = -np.round(np.rad2deg(1/2*np.arctan(2*cxy/(cx-cy))))
 
+    # Draw steering
     final_frame = display_heading_line(frame, steering_angle)
     logging.info('steering_angle: %d' % steering_angle)
     cv2.imshow("final_frame", final_frame)
@@ -146,12 +147,12 @@ time.sleep(2)
 
 input('Ready?')
 px.turn(0)
-px.run(50)
+px.run(25)
 
 for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
     frame = frame.array
     steering_angle_current = camera_feedback(frame)
-    steering_angle = steering_angle*0.9 + steering_angle_current*0.1
+    steering_angle = steering_angle*0.25 + steering_angle_current*0.75
     px.turn(np.round(steering_angle))
     rawCapture.truncate(0)   # Release cache
 

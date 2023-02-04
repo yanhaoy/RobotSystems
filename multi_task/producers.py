@@ -8,7 +8,10 @@ import time
 from line_tracking import Sensor
 
 
-def producers(wait_time, sensor: Sensor, busses: Busses):
+def producers(wait_time, sensor: Sensor, busses: Busses, busses_kill: Busses):
     while 1:
+        kill = busses_kill.read()
+        if kill:
+            break
         busses.write(sensor.read())
         time.sleep(wait_time)

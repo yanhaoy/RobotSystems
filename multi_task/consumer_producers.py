@@ -8,8 +8,11 @@ import time
 from line_tracking import Interpreter
 
 
-def consumer_producers(wait_time, interpreter: Interpreter, busses_in: Busses, busses_out: Busses):
+def consumer_producers(wait_time, interpreter: Interpreter, busses_in: Busses, busses_out: Busses, busses_kill: Busses):
     while 1:
+        kill = busses_kill.read()
+        if kill:
+            break
         data = busses_in.read()
         busses_out.write(interpreter.process(data))
         time.sleep(wait_time)

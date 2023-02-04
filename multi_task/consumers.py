@@ -8,7 +8,10 @@ import time
 from line_tracking import Controller
 
 
-def consumers(wait_time, controller: Controller, busses: Busses):
+def consumers(wait_time, controller: Controller, busses: Busses, busses_kill: Busses):
     while 1:
+        kill = busses_kill.read()
+        if kill:
+            break
         controller.drive(busses.read())
         time.sleep(wait_time)
