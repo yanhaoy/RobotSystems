@@ -16,6 +16,9 @@ class Controller(object):
         self.px.turn(0)
 
     def drive(self, dir):
+        if dir is None:
+            self.px.run(0)
+
         steering_angle_current = -dir*self.steering_angle_scale
         self.steering_angle = 0.75*self.steering_angle+0.25*steering_angle_current
         self.px.turn(round(self.steering_angle))

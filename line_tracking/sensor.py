@@ -23,7 +23,7 @@ class Sensor(object):
         self.chn_1 = ADC(pin1)
         self.chn_2 = ADC(pin2)
 
-    def read(self, zero=True):
+    def read(self):
         # The brighter the area, the larger the value obtained
         adc_value_list = []
         adc_value_list.append(self.chn_0.read())

@@ -9,6 +9,9 @@ class Interpreter(object):
         self.polarity = polarity
 
     def process(self, fl_list):
+        if fl_list is None:
+            return None
+
         diff = fl_list[0] - fl_list[2]
         # Only turn when beyond the sensitivity
         if abs(diff) < self.sensitivity:
