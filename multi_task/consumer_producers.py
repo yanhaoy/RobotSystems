@@ -10,9 +10,14 @@ from line_tracking import Interpreter
 
 def consumer_producers(wait_time, interpreter: Interpreter, busses_in: Busses, busses_out: Busses, busses_kill: Busses):
     while 1:
+        # Read the kill signal to see if going to stop
         kill = busses_kill.read()
         if kill:
             break
+
+        # Read data, process, and send out
         data = busses_in.read()
         busses_out.write(interpreter.process(data))
+
+        # Sleep
         time.sleep(wait_time)

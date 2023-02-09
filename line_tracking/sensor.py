@@ -5,7 +5,6 @@ fpath = os.path.join(os.path.dirname(__file__), os.pardir)  # nopep8
 sys.path.insert(0, fpath)  # nopep8
 
 import time
-from numpy import mean
 try:
     from robot_hat import ADC, Pin
     from robot_hat.utils import reset_mcu
@@ -23,6 +22,7 @@ class Sensor(object):
                  ultrasonic_pins: list = ['D2', 'D3'],
                  sensor_type: str = 'grayscale',
                  timeout=0.02):
+        # Setup parameters
         self.sensor_type = sensor_type
         if self.sensor_type is 'grayscale':
             self.chn_0 = ADC(grayscale_pins[0])
@@ -43,6 +43,7 @@ class Sensor(object):
         return adc_value_list
 
     def read_ultrasonic(self):
+        # It was copied from robot_hat, looks like a TOF
         self.trig.low()
         time.sleep(0.01)
         self.trig.high()
@@ -64,9 +65,11 @@ class Sensor(object):
         return cm
 
     def read(self):
+        # Call the corresponding function
         if self.sensor_type is 'grayscale':
             return self.read_grayscale()
         elif self.sensor_type is 'ultrasonic':
+            # It was copied from robot_hat
             for i in range(10):
                 a = self.read_ultrasonic()
                 if a != -1:

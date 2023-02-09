@@ -10,8 +10,13 @@ from line_tracking import Sensor
 
 def producers(wait_time, sensor: Sensor, busses: Busses, busses_kill: Busses):
     while 1:
+        # Read the kill signal to see if going to stop
         kill = busses_kill.read()
         if kill:
             break
+
+        # Send out sensor reading
         busses.write(sensor.read())
+
+        # Sleep
         time.sleep(wait_time)

@@ -103,6 +103,7 @@ def camera_feedback(frame, plot=False):
     contours, _ = cv2.findContours(cropped_closing, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     big_contour = max(contours, key=cv2.contourArea)
 
+    # Draw contours
     contours_img = np.copy(frame)
     cv2.drawContours(contours_img, [big_contour], 0, (0, 0, 255), 2)
     if plot:
@@ -135,25 +136,35 @@ def test_photo(file):
 
 # test_photo('image.npy')
 
+# Init driver
 px = Picarx()
 px.set_camera_servo2_angle(-40)
 steering_angle = 0
 
+# Init camera
 camera = PiCamera()
 camera.resolution = (640, 480)
 camera.framerate = 24
 rawCapture = PiRGBArray(camera, size=camera.resolution)
 time.sleep(2)
 
+# Get ready
 input('Ready?')
 px.turn(0)
 px.run(25)
 
 for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
     frame = frame.array
+
+    # Compute steering angle
     steering_angle_current = camera_feedback(frame)
+
+    # Low pass filter
     steering_angle = steering_angle*0.25 + steering_angle_current*0.75
+
+    # Drive
     px.turn(np.round(steering_angle))
+
     rawCapture.truncate(0)   # Release cache
 
     k = cv2.waitKey(1) & 0xFF

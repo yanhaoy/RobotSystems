@@ -6,16 +6,20 @@ sys.path.insert(0, fpath)  # nopep8
 from line_tracking import Controller, Sensor, Interpreter
 from rossros import Bus, Consumer, ConsumerProducer, Producer, Timer, runConcurrently
 
+# Init all busses
 busses_sensor = Bus(None, 'sensor_bus')
 busses_interpreter = Bus(None, 'interpreter_bus')
-busses_kill = Bus(0, 'kill_bus')
+busses_kill = Bus(False, 'kill_bus')
+
+# Init all classes
 controller = Controller()
 sensor = Sensor()
 interpreter = Interpreter()
 
+# Get ready
 input('Ready?')
 
-# Wrap the square wave signal generator into a producer
+# Wrap the sensor read into a producer
 eSensor = Producer(
     sensor.read,  # function that will generate data
     busses_sensor,  # output data bus
@@ -23,7 +27,7 @@ eSensor = Producer(
     busses_kill,  # bus to watch for termination signal
     "Read greyscale sensor")
 
-# Wrap the multiplier function into a consumer-producer
+# Wrap the interpreter process into a consumer-producer
 eInterpreter = ConsumerProducer(
     interpreter.process,  # function that will process data
     busses_sensor,  # input data buses
@@ -32,7 +36,7 @@ eInterpreter = ConsumerProducer(
     busses_kill,  # bus to watch for termination signal
     "Interprate signal")
 
-# Wrap the multiplier function into a consumer
+# Wrap the controller drive into a consumer
 eController = Consumer(
     controller.drive,  # function that will process data
     busses_interpreter,  # input data buses

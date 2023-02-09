@@ -6,29 +6,32 @@ sys.path.insert(0, fpath)  # nopep8
 from line_tracking import Controller, Sensor, Interpreter
 from rossros import Bus, Consumer, ConsumerProducer, Producer, Timer, runConcurrently
 
+# Init all busses
 busses_grayscale_sensor = Bus(None, 'grayscale_sensor_bus')
 busses_ultrasonic_sensor = Bus(None, 'ultrasonic_sensor_bus')
 busses_grayscale_interpreter = Bus(None, 'grayscale_interpreter_bus')
-busses_ultrasonic_interpreter = Bus(None, 'ultrasonic_interpreter_bus')
-busses_timer = Bus(0, 'timer_bus')
+busses_ultrasonic_interpreter = Bus(False, 'ultrasonic_interpreter_bus')
+busses_timer = Bus(False, 'timer_bus')
 
+# Init all classes
 controller = Controller()
 grayscale_sensor = Sensor(sensor_type='grayscale')
 ultrasonic_sensor = Sensor(sensor_type='ultrasonic')
 grayscale_interpreter = Interpreter(sensor_type='grayscale')
 ultrasonic_interpreter = Interpreter(sensor_type='ultrasonic')
 
+# Get ready
 input('Ready?')
 
-# Wrap the square wave signal generator into a producer
+# Wrap the sensor read into a producer
 eGrayscaleSensor = Producer(
     grayscale_sensor.read,  # function that will generate data
     busses_grayscale_sensor,  # output data bus
     1e-2,  # delay between data generation cycles
     (busses_timer, busses_ultrasonic_interpreter),  # bus to watch for termination signal
-    "Read greyscale sensor")
+    "Read grayscale sensor")
 
-# Wrap the square wave signal generator into a producer
+# Wrap the sensor read into a producer
 eUltrasonicSensor = Producer(
     ultrasonic_sensor.read,  # function that will generate data
     busses_ultrasonic_sensor,  # output data bus
@@ -36,25 +39,25 @@ eUltrasonicSensor = Producer(
     (busses_timer, busses_ultrasonic_interpreter),  # bus to watch for termination signal
     "Read ultrasonic sensor")
 
-# Wrap the multiplier function into a consumer-producer
+# Wrap the interpreter process into a consumer-producer
 eGrayscaleInterpreter = ConsumerProducer(
     grayscale_interpreter.process,  # function that will process data
     busses_grayscale_sensor,  # input data buses
     busses_grayscale_interpreter,  # output data bus
     1e-2,  # delay between data control cycles
     (busses_timer, busses_ultrasonic_interpreter),  # bus to watch for termination signal
-    "Interprate signal")
+    "Interprate grayscale signal")
 
-# Wrap the multiplier function into a consumer-producer
+# Wrap the interpreter process into a consumer-producer
 eUltrasonicInterpreter = ConsumerProducer(
     ultrasonic_interpreter.process,  # function that will process data
     busses_ultrasonic_sensor,  # input data buses
     busses_ultrasonic_interpreter,  # output data bus
     1e-2,  # delay between data control cycles
     (busses_timer, busses_ultrasonic_interpreter),  # bus to watch for termination signal
-    "Interprate signal")
+    "Interprate ultrasonic signal")
 
-# Wrap the multiplier function into a consumer
+# Wrap the controller drive into a consumer
 eController = Consumer(
     controller.drive,  # function that will process data
     busses_grayscale_interpreter,  # input data buses

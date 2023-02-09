@@ -10,8 +10,13 @@ from line_tracking import Controller
 
 def consumers(wait_time, controller: Controller, busses: Busses, busses_kill: Busses):
     while 1:
+        # Read the kill signal to see if going to stop
         kill = busses_kill.read()
         if kill:
             break
+
+        # Read data and process
         controller.drive(busses.read())
+
+        # Sleep
         time.sleep(wait_time)
