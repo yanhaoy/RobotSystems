@@ -22,6 +22,7 @@ class Controller(object):
         # Stop if no info
         if dir is None:
             self.px.run(0)
+            return
 
         # Scale steering angle
         steering_angle_current = -dir*self.steering_angle_scale

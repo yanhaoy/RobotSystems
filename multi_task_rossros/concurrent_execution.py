@@ -3,8 +3,11 @@ import sys  # nopep8
 fpath = os.path.join(os.path.dirname(__file__), os.pardir)  # nopep8
 sys.path.insert(0, fpath)  # nopep8
 
+import logging
 from line_tracking import Controller, Sensor, Interpreter
 from rossros import Bus, Consumer, ConsumerProducer, Producer, Timer, runConcurrently
+
+logging.getLogger().setLevel(logging.INFO)
 
 # Init all busses
 busses_sensor = Bus(None, 'sensor_bus')

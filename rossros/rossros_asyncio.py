@@ -34,7 +34,7 @@ task-switching architecture.
 Third, it replaces the runConcurrently function with a version that uses the asyncio paradigm.
 """
 
-from rossros import *
+from .rossros import *
 import asyncio
 
 
