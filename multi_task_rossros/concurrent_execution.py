@@ -3,13 +3,11 @@ import sys  # nopep8
 fpath = os.path.join(os.path.dirname(__file__), os.pardir)  # nopep8
 sys.path.insert(0, fpath)  # nopep8
 
-import concurrent.futures
 from line_tracking import Controller, Sensor, Interpreter
-from rossros import Bus, Consumer, ConsumerProducer, Producer, Printer, Timer, runConcurrently
-import time
+from rossros import Bus, Consumer, ConsumerProducer, Producer, Timer, runConcurrently
 
 busses_sensor = Bus(None, 'sensor_bus')
-busses_interpreter = Bus(None, 'nterpreter_bus')
+busses_interpreter = Bus(None, 'interpreter_bus')
 busses_kill = Bus(0, 'kill_bus')
 controller = Controller()
 sensor = Sensor()

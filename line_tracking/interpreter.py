@@ -3,12 +3,16 @@ from numpy import sign
 
 
 class Interpreter(object):
-    def __init__(self, sensitivity=50, polarity=False):
-        # polarity: True for darker line
-        self.sensitivity = sensitivity
-        self.polarity = polarity
+    def __init__(self, sensitivity=50, polarity=False, sensor_type='grayscale', distance_threshold=25):
+        self.sensor_type = sensor_type
+        if self.sensor_type is 'grayscale':
+            # polarity: True for darker line
+            self.sensitivity = sensitivity
+            self.polarity = polarity
+        elif self.sensor_type is 'ultrasonic':
+            self.distance_threshold = distance_threshold
 
-    def process(self, fl_list):
+    def process_grayscale(self, fl_list):
         if fl_list is None:
             return None
 
@@ -22,3 +26,15 @@ class Interpreter(object):
                 return -dir
             else:
                 return dir
+
+    def process_ultrasonic(self, dis):
+        if dis is None or dis > 25 or dis < 0:
+            return False
+        else:
+            return True
+
+    def process(self, read):
+        if self.sensor_type is 'grayscale':
+            return self.process_grayscale(read)
+        elif self.sensor_type is 'ultrasonic':
+            return self.process_ultrasonic(read)
