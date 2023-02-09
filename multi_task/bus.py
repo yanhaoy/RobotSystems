@@ -1,7 +1,7 @@
 from readerwriterlock import rwlock
 
 
-class Busses(object):
+class Bus(object):
     def __init__(self):
         # Init lock and clear message
         self.lock = rwlock.RWLockWriteD()
