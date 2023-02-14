@@ -10,11 +10,11 @@ from rossros import Bus, Consumer, ConsumerProducer, Producer, Timer, runConcurr
 logging.getLogger().setLevel(logging.INFO)
 
 # Init all busses
-busses_grayscale_sensor = Bus(None, 'grayscale_sensor_bus')
-busses_ultrasonic_sensor = Bus(None, 'ultrasonic_sensor_bus')
-busses_grayscale_interpreter = Bus(None, 'grayscale_interpreter_bus')
-busses_ultrasonic_interpreter = Bus(False, 'ultrasonic_interpreter_bus')
-busses_timer = Bus(False, 'timer_bus')
+bus_grayscale_sensor = Bus(None, 'grayscale_sensor_bus')
+bus_ultrasonic_sensor = Bus(None, 'ultrasonic_sensor_bus')
+bus_grayscale_interpreter = Bus(None, 'grayscale_interpreter_bus')
+bus_ultrasonic_interpreter = Bus(False, 'ultrasonic_interpreter_bus')
+bus_timer = Bus(False, 'timer_bus')
 
 # Init all classes
 controller = Controller()
@@ -29,57 +29,58 @@ input('Ready?')
 # Wrap the sensor read into a producer
 eGrayscaleSensor = Producer(
     grayscale_sensor.read,  # function that will generate data
-    busses_grayscale_sensor,  # output data bus
+    bus_grayscale_sensor,  # output data bus
     1e-2,  # delay between data generation cycles
-    busses_ultrasonic_interpreter,  # bus to watch for termination signal
+    (bus_timer, bus_ultrasonic_interpreter),  # bus to watch for termination signal
     "Read grayscale sensor")
 
 # Wrap the sensor read into a producer
 eUltrasonicSensor = Producer(
     ultrasonic_sensor.read,  # function that will generate data
-    busses_ultrasonic_sensor,  # output data bus
+    bus_ultrasonic_sensor,  # output data bus
     1e-2,  # delay between data generation cycles
-    busses_ultrasonic_interpreter,  # bus to watch for termination signal
+    (bus_timer, bus_ultrasonic_interpreter),  # bus to watch for termination signal
     "Read ultrasonic sensor")
 
 # Wrap the interpreter process into a consumer-producer
 eGrayscaleInterpreter = ConsumerProducer(
     grayscale_interpreter.process,  # function that will process data
-    busses_grayscale_sensor,  # input data buses
-    busses_grayscale_interpreter,  # output data bus
+    bus_grayscale_sensor,  # input data buses
+    bus_grayscale_interpreter,  # output data bus
     1e-2,  # delay between data control cycles
-    busses_ultrasonic_interpreter,  # bus to watch for termination signal
+    (bus_timer, bus_ultrasonic_interpreter),  # bus to watch for termination signal
     "Interprate grayscale signal")
 
 # Wrap the interpreter process into a consumer-producer
 eUltrasonicInterpreter = ConsumerProducer(
     ultrasonic_interpreter.process,  # function that will process data
-    busses_ultrasonic_sensor,  # input data buses
-    busses_ultrasonic_interpreter,  # output data bus
+    bus_ultrasonic_sensor,  # input data buses
+    bus_ultrasonic_interpreter,  # output data bus
     1e-2,  # delay between data control cycles
-    busses_ultrasonic_interpreter,  # bus to watch for termination signal
+    (bus_timer, bus_ultrasonic_interpreter),  # bus to watch for termination signal
     "Interprate ultrasonic signal")
 
 # Wrap the controller drive into a consumer
 eController = Consumer(
     controller.drive,  # function that will process data
-    busses_grayscale_interpreter,  # input data buses
+    bus_grayscale_interpreter,  # input data buses
     1e-2,  # delay between data control cycles
-    busses_ultrasonic_interpreter,  # bus to watch for termination signal
+    (bus_timer, bus_ultrasonic_interpreter),  # bus to watch for termination signal
     "Control the cart")
 
 # Make a timer (a special kind of producer) that turns on the termination
 # bus when it triggers
-# eTimer = Timer(
-#     busses_timer,  # Output data bus
-#     3,  # Duration
-#     1e-2,  # Delay between checking for termination time
-#     busses_ultrasonic_interpreter,  # Bus to check for termination signal
-#     "Termination timer")  # Name of this timer
+eTimer = Timer(
+    bus_timer,  # Output data bus
+    3,  # Duration
+    1e-2,  # Delay between checking for termination time
+    (bus_timer, bus_ultrasonic_interpreter),  # Bus to check for termination signal
+    "Termination timer")  # Name of this timer
 
 # Create a list of producer-consumers to execute concurrently
 producer_consumer_list = [eGrayscaleSensor, eUltrasonicSensor,
-                          eGrayscaleInterpreter, eUltrasonicInterpreter, eController]
+                          eGrayscaleInterpreter, eUltrasonicInterpreter, 
+                          eController, eTimer]
 
 # Execute the list of producer-consumers concurrently
 runConcurrently(producer_consumer_list)

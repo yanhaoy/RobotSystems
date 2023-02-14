@@ -10,9 +10,9 @@ from rossros import Bus, Consumer, ConsumerProducer, Producer, Timer, runConcurr
 logging.getLogger().setLevel(logging.INFO)
 
 # Init all busses
-busses_sensor = Bus(None, 'sensor_bus')
-busses_interpreter = Bus(None, 'interpreter_bus')
-busses_kill = Bus(False, 'kill_bus')
+bus_sensor = Bus(None, 'sensor_bus')
+bus_interpreter = Bus(None, 'interpreter_bus')
+bus_kill = Bus(False, 'kill_bus')
 
 # Init all classes
 controller = Controller()
@@ -25,35 +25,35 @@ input('Ready?')
 # Wrap the sensor read into a producer
 eSensor = Producer(
     sensor.read,  # function that will generate data
-    busses_sensor,  # output data bus
+    bus_sensor,  # output data bus
     1e-2,  # delay between data generation cycles
-    busses_kill,  # bus to watch for termination signal
+    bus_kill,  # bus to watch for termination signal
     "Read greyscale sensor")
 
 # Wrap the interpreter process into a consumer-producer
 eInterpreter = ConsumerProducer(
     interpreter.process,  # function that will process data
-    busses_sensor,  # input data buses
-    busses_interpreter,  # output data bus
+    bus_sensor,  # input data buses
+    bus_interpreter,  # output data bus
     1e-2,  # delay between data control cycles
-    busses_kill,  # bus to watch for termination signal
+    bus_kill,  # bus to watch for termination signal
     "Interprate signal")
 
 # Wrap the controller drive into a consumer
 eController = Consumer(
     controller.drive,  # function that will process data
-    busses_interpreter,  # input data buses
+    bus_interpreter,  # input data buses
     1e-2,  # delay between data control cycles
-    busses_kill,  # bus to watch for termination signal
+    bus_kill,  # bus to watch for termination signal
     "Control the cart")
 
 # Make a timer (a special kind of producer) that turns on the termination
 # bus when it triggers
 eTimer = Timer(
-    busses_kill,  # Output data bus
+    bus_kill,  # Output data bus
     3,  # Duration
     1e-2,  # Delay between checking for termination time
-    busses_kill,  # Bus to check for termination signal
+    bus_kill,  # Bus to check for termination signal
     "Termination timer")  # Name of this timer
 
 # Create a list of producer-consumers to execute concurrently
