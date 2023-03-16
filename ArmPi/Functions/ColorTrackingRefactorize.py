@@ -14,11 +14,12 @@ from rossros import Bus, ConsumerProducer, Timer, runConcurrently
 logging.getLogger().setLevel(logging.INFO)
 
 # Init all busses
-bus_share = Bus(ShareData(), 'bus_share')
+share = ShareData()
+bus_share = Bus(share, 'bus_share')
 bus_kill = Bus(False, 'bus_kill')
 
 # Init all classes
-controller = Control()
+controller = Control(share)
 sensor = Perception()
 
 # Get ready
@@ -29,7 +30,7 @@ eController = ConsumerProducer(
     controller.move,  # function that will process data
     bus_share,  # input data buses
     bus_share,  # output data bus
-    1e-2,  # delay between data control cycles
+    1e-1,  # delay between data control cycles
     bus_kill,  # bus to watch for termination signal
     "Controller")
 
@@ -38,7 +39,7 @@ eSensor = ConsumerProducer(
     sensor.sense,  # function that will process data
     bus_share,  # input data buses
     bus_share,  # output data bus
-    1e-2,  # delay between data control cycles
+    1e-1,  # delay between data control cycles
     bus_kill,  # bus to watch for termination signal
     "Sensor")
 
@@ -46,8 +47,8 @@ eSensor = ConsumerProducer(
 # bus when it triggers
 eTimer = Timer(
     bus_kill,  # Output data bus
-    3,  # Duration
-    1e-2,  # Delay between checking for termination time
+    60,  # Duration
+    1e-1,  # Delay between checking for termination time
     bus_kill,  # Bus to check for termination signal
     "Termination timer")  # Name of this timer
 

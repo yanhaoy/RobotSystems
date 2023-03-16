@@ -5,6 +5,7 @@ fpath = os.path.join(os.path.dirname(__file__), os.pardir)  # nopep8
 sys.path.insert(0, fpath)  # nopep8
 
 import time
+import atexit
 from LABConfig import *
 from ArmIK.Transform import *
 from ArmIK.ArmMoveIK import *
@@ -13,8 +14,9 @@ from CameraCalibration.CalibrationConfig import *
 
 
 class Control:
-    def __init__(self) -> None:
-        return
+    def __init__(self, share) -> None:
+        initMove(share)
+        atexit.register(initMove, share)
 
     def move(self, share):
         # different colors blocks place coordinates(x, y, z)

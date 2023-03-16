@@ -43,7 +43,7 @@ class Perception:
         areaMaxContour = 0
         if not share.start_pick_up:
             for i in color_range:
-                if i in share.__target_color:
+                if i in share.target_color:
                     share.detect_color = i
                     # mathematical operation on the original image and mask
                     frame_mask = cv2.inRange(

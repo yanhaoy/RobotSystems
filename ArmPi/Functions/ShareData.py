@@ -18,7 +18,7 @@ class ShareData:
         self.get_roi = False
         self.center_list = []
         self.first_move = True
-        self.__target_color = ('red',)
+        self.target_color = ('red',)
         self.detect_color = 'None'
         self.action_finish = True
         self.start_pick_up = False
